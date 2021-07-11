@@ -1,0 +1,49 @@
+setwd("../sorghum_wgs/pop")
+
+library(SNPRelate)
+vcf.snp <- "../sorghum_wgs/SNP/filtered/sorghum.snp.vcf.gz"
+snpgdsVCF2GDS(vcf.snp,"sorghumsnp.gds", method="copy.num.of.ref")
+genofile <- snpgdsOpen("sorghumsnp.gds")
+
+snpset2 <- snpgdsLDpruning(genofile,ld.threshold = 1,maf=0.01,missing.rate=0.2)
+snpset2.id <- unlist(snpset2)
+
+pca <- snpgdsPCA(genofile,snp.id=snpset2.id,num.thread=4,autosome.only=FALSE)
+
+pc.percent <- pca$varprop*100
+
+head(round(pc.percent, 2),20)
+[1] 5.43 4.61 3.90 3.03 2.65 1.97 1.81 1.61 1.58 1.42 1.20 1.13 1.09 0.98 0.83
+[16] 0.81 0.66 0.66 0.62 0.59
+
+sum(pc.percent[1:20])
+[1] 36.57009
+
+EV = pca$eigenvect[,1:20]
+tab <- data.frame(sample.id = pca$sample.id,EV,stringsAsFactors = FALSE)
+write.table(tab,"PCA.txt",quote=F,row.names=F,sep="\t")
+
+setwd("../sorghum_wgs/pop")
+
+pc<-read.table("PCA.txt",header=T)
+
+gm<-read.csv("../sorghum_wgs/sorghum_germplasm.csv")
+
+pc_gm<-merge(pc,gm,by.x="sample.id",by.y="Germplasm.ID")
+
+# make color
+library(scales)
+pc_gm$color<-"gray50"
+pc_gm$color[grep("Wild",pc_gm$Breeding.status)]<-"darkorange1"
+pc_gm$color[grep("Landrace",pc_gm$Breeding.status)]<-"darkolivegreen3"
+pc_gm$color[grep("Cultivar",pc_gm$Breeding.status)]<-"dodgerblue1"
+
+png("pca.germplasm.png",width=12,height=6,type="cairo",unit="in",res=600)
+par(mfrow=c(1,2),mgp=c(1.8,0.1,0),tck=-0.01,las=1)
+plot(pc_gm$X1,pc_gm$X2,col=alpha(pc_gm$color,0.8),xlab=paste0("PC1 (",round(pc.percent[1], 2),"%)"),ylab=paste0("PC2 (",round(pc.percent[2], 2),"%)"),pch=19,cex.lab=1.3)
+legend("topleft",legend=c("Wild","Landrace","Cultivar","Other"),text.font=c(1,1,1),col=alpha(c("darkorange1","darkolivegreen3","dodgerblue1","gray50"),0.5),pch=19,pt.cex=1,bty="n")
+
+plot(pc_gm$X1,pc_gm$X3,col=alpha(pc_gm$color,0.8),xlab=paste0("PC1 (",round(pc.percent[1], 2),"%)"),ylab=paste0("PC3 (",round(pc.percent[3], 2),"%)"),pch=19,cex.lab=1.3)
+legend("topleft",legend=c("Wild","Landrace","Cultivar","Other"),text.font=c(1,1,1),col=alpha(c("darkorange1","darkolivegreen3","dodgerblue1","gray50"),0.5),pch=19,pt.cex=1,bty="n")
+
+dev.off()
