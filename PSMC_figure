@@ -1,0 +1,61 @@
+# a function process psmc result to be a data frame
+# edit from a published paper: https://datadryad.org/stash/dataset/doi:10.5061/dryad.0618v
+
+psmc.result<-function(file,i.iteration=25,mu=3.0e-08,s=100,g=1)
+{
+
+	X<-scan(file=file,what="",sep="\n",quiet=TRUE)
+	START<-grep("^RD",X)
+	END<-grep("^//",X)
+	X<-X[START[i.iteration+1]:END[i.iteration+1]]
+	TR<-grep("^TR",X,value=TRUE)
+	RS<-grep("^RS",X,value=TRUE)
+	write(TR,"temp.psmc.result")
+	theta0<-as.numeric(read.table("temp.psmc.result")[1,2])
+	N0<-theta0/4/mu/s
+	write(RS,"temp.psmc.result")
+	a<-read.table("temp.psmc.result")
+	Generation<-as.numeric(2*N0*a[,3])
+	Ne<-as.numeric(N0*a[,4])
+	file.remove("temp.psmc.result")
+	n.points<-length(Ne)
+	YearsAgo<-c(as.numeric(rbind(Generation[-n.points],Generation[-1])),
+		Generation[n.points])*g
+	Ne<-c(as.numeric(rbind(Ne[-n.points],Ne[-n.points])),
+		Ne[n.points])
+	res<-data.frame(YearsAgo,Ne)
+	return(res)
+}
+
+for(i in keywords){
+	res<-psmc.result(i)
+	write.csv(res,sprintf("%s.csv",i),row.names=F)
+}
+
+# figure
+setwd("../sorghum_demography")
+library(scales)
+
+keywords<-c("WS6.psmc","dms2.psmc","dms17.psmc","dms13.psmc","dms10.psmc","dms1.psmc")
+cols<-c("dodgerblue1","darkolivegreen3","darkolivegreen3","darkolivegreen3","darkolivegreen3","darkolivegreen3")
+png("sorghum_psmc.png",width=4,height=3,unit="in",res=600,type="cairo")
+par(mai=c(0.5,0.6,0.1,0.1),mgp=c(1.5,0.2,0),las=1,tck=0.01)
+plot(1,1,type="n",ylim=c(3,11),xlim=c(2,6.5),axes=F,frame=T, ylab="Effective population size (Ne)",xlab=expression(paste("Years (g=1;",mu, "=3.0x",10^-8,")")))
+
+for(i in 1:length(keywords)){
+    gs<-read.csv(sprintf("%s.csv",keywords[i]))
+    lines(log10(gs$YearsAgo),log10(gs$Ne),type="s",lwd=1,col=alpha(cols[i],0.8))
+    }
+
+Tx<-c(100,200,300,400,500,600,700,800,9000,1000,2000,3000,4000,5000,6000,7000,8000,9000,
+      10000,20000,30000,40000,50000,60000,70000,80000,90000,
+      100000,200000,300000,400000,500000,600000,700000,800000,900000,
+      1000000,2000000,3000000,4000000,5000000,6000000,7000000,8000000,9000000)
+xx<-log10(Tx)
+axis(1,at=xx,label=F)
+axis(1,at=c(2,3,4,5,6),label=c(expression(10^2),expression(10^3),expression(10^4),expression(10^5),expression(10^6)),cex.axis=0.8)
+
+axis(2,at=c(3,4,5,6,7,8,9,10,11),label=c(expression(10^3),expression(10^4),expression(10^5),expression(10^6),expression(10^7),expression(10^7),expression(10^9),expression(10^10),expression(10^11)),cex.axis=0.8)
+
+legend("topright",legend=c("Wild","Domesticated"),lwd=2,lty=rep(1,4),col=c("dodgerblue1","darkolivegreen3"),bty="n",cex=0.8)
+dev.off()
