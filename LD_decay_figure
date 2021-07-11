@@ -1,0 +1,58 @@
+# make a LD decay curve for different germplasm types
+# in the figure three LD curves were drawn for three germplasm types
+
+LD_wild<-read.table(gzfile("../sorghum_wgs/LD_decay/LD.Wild.05.stat.gz"),header=F)
+LD_Landrace<-read.table(gzfile("../sorghum_wgs/LD_decay/LD.Landrace.05.stat.gz"),header=F)
+LD_Cultivar<-read.table(gzfile("../sorghum_wgs/LD_decay/LD.Cultivar.05.stat.gz"),header=F)
+
+LD_all<-read.table(gzfile("../sorghum_wgs/LD_decay/LD.stat.gz"),header=F)
+
+png("LD_decay.png",width=4,height=3,res=600,unit="in",type="cairo")
+par(mai=c(0.6,0.6,0.2,0.2),mgp=c(1.2,0.2,0),tck=-0.01)
+
+plot(0,0,xlim=c(0,600000),ylim=c(0,0.5),axes=F,type="n",xlab="Distance (kb)",ylab=expression(LD~(r^{2})),cex.lab=1)
+axis(1,at=c(0,100,200,300,400,500,600)*1000,labels=c(0,100,200,300,400,500,600),cex.axis=0.8)
+axis(2,at=c(0,0.1,0.2,0.3,0.4,0.5),labels=c(0,0.1,0.2,0.3,0.4,0.5),las=1,cex.axis=0.8)
+
+smoothingSpline_wild = smooth.spline(LD_wild[,1],LD_wild[,2], spar=0.05)
+lines(smoothingSpline_wild,col="darkorange1")
+
+smoothingSpline_Landrace = smooth.spline(LD_Landrace[,1],LD_Landrace[,2], spar=0.05)
+lines(smoothingSpline_Landrace,col="darkolivegreen3")
+
+smoothingSpline_Cultivar = smooth.spline(LD_Cultivar[,1],LD_Cultivar[,2], spar=0.05)
+lines(smoothingSpline_Cultivar,col="dodgerblue1")
+
+smoothingSpline_all = smooth.spline(LD_all[,1],LD_all[,2], spar=0.05)
+lines(smoothingSpline_all,col="gray50")
+
+legend("topright",legend=c("Wild","Landrace","Cultivar","All"),text.font=c(1,1,1),col=c("darkorange1","darkolivegreen3","dodgerblue1","gray50"),pch="-",pt.cex=2,bty="n")
+dev.off()
+
+
+
+
+# for different countries germplasm
+
+setwd("../sorghum_wgs/LD_decay")
+
+files<-c("LD.Ethiopia.05.stat.gz","LD.India.05.stat.gz","LD.Nigeria.05.stat.gz","LD.Sudan.05.stat.gz","LD.United_States.05.stat.gz",
+        "LD.China.05.stat.gz","LD.Zimbabwe.05.stat.gz","LD.South_Africa.05.stat.gz","LD.Kenya.05.stat.gz")
+
+cols<-c("darkgoldenrod1","deepskyblue","darkorchid1","lightpink","orange4","red","royalblue2","deeppink","deepskyblue4")
+
+png("LD_decay_origins.png",width=4,height=3,res=600,unit="in",type="cairo")
+par(mai=c(0.5,0.5,0.2,0.2),mgp=c(1.2,0.1,0),tck=-0.01)
+
+plot(0,0,xlim=c(0,600000),ylim=c(0,0.7),axes=F,type="n",xlab="Distance (kb)",ylab=expression(LD~(r^{2})),cex.lab=1)
+axis(1,at=c(0,100,200,300,400,500,600)*1000,labels=c(0,100,200,300,400,500,600),cex.axis=0.8)
+axis(2,at=c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7),labels=c(0,0.1,0.2,0.3,0.4,0.5,0.6,0.7),las=1,cex.axis=0.8)
+
+for(i in 1:length(files)){
+    LD<-read.table(gzfile(sprintf("/bulk/zhenbin/sorghum_wgs/LD_decay/%s",files[i])),header=F)
+    smoothingSpline = smooth.spline(LD[,1],LD[,2], spar=0.05)
+    lines(smoothingSpline,col=cols[i])
+}
+
+legend("topright",legend=c("Ethiopia","India","Nigeria","Sudan","United States","China","Zimbabwe","South Africa","Kenya"),text.font=c(1,1,1),col=cols,pch="-",pt.cex=1,cex=0.6,bty="n")
+dev.off()
