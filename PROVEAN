@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=provean
+#SBATCH --output=provean.txt
+#SBATCH --time=5:00:00
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --partition=killable.q
+#SBATCH --mem-per-cpu=20GB
+#SBATCH --mail-user=zhenbin@ksu.edu
+
+BLAST_DB="../nr/nr"
+PSIBLAST="../ncbi-blast-2.8.1+/bin/psiblast" 
+BLASTDBCMD="../ncbi-blast-2.8.1+/bin/blastdbcmd" 
+CDHIT="../deleterious/cd-hit-v4.8.1-2019-0228/cd-hit"
+provean="../deleterious/provean-1.1.5/src/provean"
+
+QUERY=$1
+VARIATION=$2
+out_dir=$3
+$provean -q $QUERY -v $VARIATION -d $BLAST_DB --psiblast $PSIBLAST --cdhit $CD_HIT --blastdbcmd $BLASTDBCMD > VARIATION.out
+
+
+# submit for each gene
+out_dir="/bulk/zhenbin/deleterious"
+QUERY=“P04637.fasta"
+VARIATION="P04637.var"
+
+sbatch provean.sh $QUERY $VARIATION $out_dir
