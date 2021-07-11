@@ -47,3 +47,29 @@ plot(pc_gm$X1,pc_gm$X3,col=alpha(pc_gm$color,0.8),xlab=paste0("PC1 (",round(pc.p
 legend("topleft",legend=c("Wild","Landrace","Cultivar","Other"),text.font=c(1,1,1),col=alpha(c("darkorange1","darkolivegreen3","dodgerblue1","gray50"),0.5),pch=19,pt.cex=1,bty="n")
 
 dev.off()
+
+# by origin/countries
+
+pc_gm$Origin_color<-"gray50"
+pc_gm$Origin_color[grep("China",pc_gm$Origin)]<-"red"
+pc_gm$Origin_color[grep("Ethiopia",pc_gm$Origin)]<-"darkgoldenrod1"
+pc_gm$Origin_color[grep("India",pc_gm$Origin)]<-"deepskyblue"
+pc_gm$Origin_color[grep("Kenya",pc_gm$Origin)]<-"deepskyblue4"
+pc_gm$Origin_color[grep("Nigeria",pc_gm$Origin)]<-"darkorchid1"
+pc_gm$Origin_color[grep("South Africa",pc_gm$Origin)]<-"deeppink"
+pc_gm$Origin_color[grep("Sudan",pc_gm$Origin)]<-"lightpink"
+pc_gm$Origin_color[grep("United States",pc_gm$Origin)]<-"orange4"
+pc_gm$Origin_color[grep("Zimbabwe",pc_gm$Origin)]<-"royalblue2"
+
+
+legends<-c("China","Ethiopia","India","Kenya","Nigeria","South Africa","Sudan","United States","Zimbabwe","Other")
+col<-c("red","darkgoldenrod1","deepskyblue","deepskyblue4","darkorchid1","deeppink","lightpink","orange4","royalblue2","gray50")
+
+png("pca.Origin.png",width=8,height=4,type="cairo",unit="in",res=600)
+par(mfrow=c(1,2),mai=c(0.6,0.6,0.1,0.1),mgp=c(1.8,0.1,0),tck=-0.01,las=1)
+plot(pc_gm$X1,pc_gm$X2,col=alpha(pc_gm$Origin_color,0.5),xlab="PC1 (5.43%)",ylab="PC2 (4.61%)",pch=19,cex.lab=1.3)
+legend("topleft",legend=legends,text.font=c(1,1,1),col=alpha(col,0.5),pch=19,pt.cex=0.8,bty="n", cex=0.8)
+
+plot(pc_gm$X1,pc_gm$X3,col=alpha(pc_gm$Origin_color,0.5),xlab="PC1 (5.43%)",ylab="PC3 (3.90%)",pch=19,cex.lab=1.3)
+legend("topleft",legend=legends,text.font=c(1,1,1),col=alpha(col,0.5),pch=19,pt.cex=0.8,bty="n", cex=0.8)
+dev.off()
