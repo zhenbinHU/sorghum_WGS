@@ -1,0 +1,29 @@
+# LD decay
+#!/bin/bash
+#SBATCH --job-name=LD
+#SBATCH --output=LD.txt
+#SBATCH --time=1-00:00:00
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --partition=killable.q
+#SBATCH --mem-per-cpu=100GB
+#SBATCH --mail-user=zhenbin@ksu.edu
+
+cd $working_dir
+PopLDdecay=".../PopLDdecay"
+dest="../sorghum_wgs/LD_decay"
+
+# input the germplasm file
+i=$1
+
+vcftools="../vcftools/bin/vcftools"
+$vcftools --gzvcf ../sorghum_wgs/variants/sorghum.snp.vcf.gz --keep $i --recode --recode-INFO-all --out $dest/filtered.$i
+$PopLDdecay -InVCF filtered.$i.recode.vcf -MaxDist 1000 -MAF 0.05 -OutStat $dest/LD.$i.05
+
+
+# submit the jobs for different germplasm types
+
+for i in Cultivar Wild Landrace
+do
+sbatch LD $i
+done
