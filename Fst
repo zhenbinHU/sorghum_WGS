@@ -1,0 +1,13 @@
+# Fst between different gernmplast type: wild, landrace, and cultivar
+
+cd ../sorghum_wgs/diversity
+
+vcftools="../vcftools/bin/vcftools"
+dir="../sorghum_wgs/variants"
+germplasm_dir="../sorghum_wgs"
+# allele frequencing for all germplasm
+
+# sliding window based Fst
+$vcftools --gzvcf $dir/sorghum.snp.vcf.gz --weir-fst-pop $germplasm_dir/Wild --weir-fst-pop $germplasm_dir/Landrace --fst-window-size 100000 --window-pi-step 20000 --out wild_landrace100k.step
+$vcftools --gzvcf $dir/sorghum.snp.vcf.gz --weir-fst-pop $germplasm_dir/Landrace --weir-fst-pop $germplasm_dir/Cultivar --fst-window-size 100000 --window-pi-step 20000 --out landrace_cultivar100k.step
+$vcftools --gzvcf $dir/sorghum.snp.vcf.gz --weir-fst-pop $germplasm_dir/Wild --weir-fst-pop $germplasm_dir/Cultivar --fst-window-size 100000 --window-pi-step 20000 --out wild_landrace100k.step
