@@ -1,0 +1,1 @@
+treemix -i sorghum_treemix.gz -m 10 -bootstrap -k 1000 -root Wild -o sorghum_treemix
