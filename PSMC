@@ -1,0 +1,73 @@
+#!/bin/bash
+#SBATCH --job-name=psmc
+#SBATCH --output=psmc.txt
+#SBATCH --time=1-00:00:00
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem-per-cpu=50GB
+#SBATCH --partition=killable.q
+#SBATCH --mail-user=zhenbin@ksu.edu
+
+# loading softwares for bam files process and plot
+module load SAMtools/1.9-GCC-7.3.0-2.30
+module load BCFtools/1.10.2-foss-2019b       
+module load gnuplot/5.2.8-GCCcore-8.3.0 
+module load BEDTools/2.29.1-GCC-8.3.0
+# merge two bam to obtain a heterozygous genome for psmc
+# input files
+# 1 for the first bam, 2 for the second bam
+# out for the prefix of output file
+
+genotype_1=$1 # bam file 1
+genotype_2=$2 # bam file 2
+out=$3 # output name
+
+# working dir
+cd ../sorghum_demography/wild
+
+# reference and functions for psmc
+ref="../sorghum_wgs/reference/Sbicolor_454_v3.0.1.fa"
+fq2psmcfa="../psmc-master/utils/fq2psmcfa"
+psmc="../psmc-master/psmc"
+psmc_plot="../psmc-master/utils/psmc_plot.pl"
+
+# merge two bam files
+samtools merge $out.bam $genotype_1 $genotype_2
+
+# remove the repetitive regions
+
+bedtools intersect -abam $out.bam -b ../deleterious/repetitive.bed -v > filtered.$out.bam
+
+# the depth can be calculated using following code
+samtools sort filtered.$out.bam -o sorted.$out.bam
+samtools index sorted.$out.bam
+
+DEPTH=$(samtools depth sorted.$out.bam |  awk '{sum+=$3} END { print sum/NR}')
+
+d=$(echo "scale=4; $DEPTH/3" | bc )
+D=$(echo "scale=4; $DEPTH*2" | bc )
+
+# -d to be a third of the average depth and -D to twice
+for CHR in 01 02 03 04 05 06 07 08 09 10
+do
+bcftools mpileup -Q 30 -q 30 -f $ref $out.bam -r Chr$CHR | bcftools call -c | vcfutils.pl vcf2fq -d $d -D $D -Q 30 > $out.chr$CHR.fq
+done
+
+cat $out.chr*.fq > $out.consensus.fq
+
+# remove the each chromosome
+rm $out.$chr*.fq
+
+# run PSMC
+$fq2psmcfa $out.consensus.fq > $out.psmcfa
+$psmc -p "4+25*2+4+6" -o $out.psmc $out.psmcfa
+
+# make figure 
+# mutant rate  3.02e−08
+# 1 year per generation
+
+$psmc_plot -u 3.02e−08 -g 1 -p $out.plot $out.psmc
+
+
+
+
